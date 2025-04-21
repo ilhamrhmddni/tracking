@@ -1,21 +1,29 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const useragent = require("express-useragent");
 const geoip = require("geoip-lite");
-const mongoose = require("mongoose");
 
 const app = express();
 const PORT = 3000;
+const MONGO_URI = "mongodb://localhost:27017/trackingDB";
 
-// Middleware useragent
+// Middleware user-agent
 app.use(useragent.express());
 
-// Koneksi MongoDB
+// Koneksi ke MongoDB
 mongoose
-  .connect("mongodb://localhost:27017/trackDB")
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((error) => console.error("Error connecting to MongoDB:", error));
+  .connect(MONGO_URI, {
+    dbName: "trackingDB",
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }) // Added options for compatibility
+  .then(() => console.log("✅ Terhubung ke MongoDB"))
+  .catch((err) => {
+    console.error("❌ Gagal konek MongoDB:", err);
+    process.exit(1); // Exit process if connection fails
+  });
 
-// Schema untuk Data Tracking
+// Skema dan model
 const trackingSchema = new mongoose.Schema({
   id: String,
   ip: String,
@@ -24,41 +32,51 @@ const trackingSchema = new mongoose.Schema({
   os: String,
   time: Date,
 });
+const Tracking = mongoose.model("Tracking", trackingSchema);
 
-const TrackingData = mongoose.model("TrackingData", trackingSchema);
+// Route utama
+app.get("/track/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+    const geo = geoip.lookup(ip);
+    const ua = req.useragent;
 
-// Route tracking
-app.get("/track/:id", (req, res) => {
-  const id = req.params.id;
-  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  const geo = geoip.lookup(ip);
-  const ua = req.useragent;
-
-  const data = {
-    id,
-    ip,
-    location: geo,
-    browser: ua.browser,
-    os: ua.os,
-    time: new Date(),
-  };
-
-  // Simpan data ke MongoDB
-  const newTrackingData = new TrackingData(data);
-
-  newTrackingData
-    .save()
-    .then(() => {
-      console.log("Data tracking berhasil disimpan ke MongoDB");
-      res.redirect("https://example.com");
-    })
-    .catch((error) => {
-      console.error("Gagal menyimpan data ke MongoDB:", error);
-      res.status(500).send("Terjadi kesalahan saat menyimpan data.");
+    console.log("📥 Data yang akan disimpan:", {
+      id,
+      ip,
+      location: geo,
+      browser: ua.browser,
+      os: ua.os,
+      time: new Date(),
     });
+
+    const data = new Tracking({
+      id,
+      ip,
+      location: geo,
+      browser: ua.browser,
+      os: ua.os,
+      time: new Date(),
+    });
+
+    await data
+      .save()
+      .then(() => {
+        console.log("✅ Data berhasil disimpan ke database:", data);
+      })
+      .catch((saveError) => {
+        console.error("❌ Gagal menyimpan data ke database:", saveError);
+      });
+
+    res.redirect("https://example.com"); // Ganti sesuai kebutuhan
+  } catch (error) {
+    console.error("❌ Error saat menyimpan data:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server jalan di http://localhost:${PORT}`);
+  console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
 });
