@@ -6,7 +6,7 @@ const geoip = require("geoip-lite");
 const app = express();
 const PORT = 3000;
 const MONGO_URI =
-  "mongodb+srv://ilhamrhmddni:110402@ilhamrhmddni.fqznp3q.mongodb.net/?retryWrites=true&w=majority&appName=ilhamrhmddni"; // URL MongoDB lokal
+  "mongodb+srv://ilhamrhmddni:110402@ilhamrhmddni.fqznp3q.mongodb.net/trackingDB"; // URL MongoDB lokal
 
 // Middleware useragent
 app.use(useragent.express());
