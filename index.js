@@ -1,6 +1,7 @@
 const express = require("express");
 const useragent = require("express-useragent");
 const geoip = require("geoip-lite");
+const fs = require("fs");
 
 const app = express();
 const PORT = 3000;
@@ -39,5 +40,10 @@ app.get("/track/:id", (req, res) => {
   // Tulis kembali ke file
   fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2));
 
-  res.redirect("https://instagram.com/ilhamrhmddni");
+  res.redirect("https://example.com");
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server jalan di http://localhost:${PORT}`);
 });
