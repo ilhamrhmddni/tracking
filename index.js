@@ -14,8 +14,6 @@ app.use(useragent.express());
 mongoose
   .connect(MONGO_URI, {
     dbName: "trackingDB",
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
   }) // Added options for compatibility
   .then(() => console.log("✅ Terhubung ke MongoDB"))
   .catch((err) => {
