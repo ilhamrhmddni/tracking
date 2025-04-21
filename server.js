@@ -9,13 +9,11 @@ const port = 3000;
 app.use(bodyParser.json());
 
 // Koneksi ke MongoDB
+
 mongoose
-  .connect("mongodb://localhost:27017/trackingDB", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect("mongodb://localhost:27017/trackingDB")
   .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.log("Error connecting to MongoDB:", err));
+  .catch((error) => console.error("Error connecting to MongoDB:", error));
 
 // Schema dan model untuk data klik
 const clickSchema = new mongoose.Schema({

@@ -1,13 +1,31 @@
 const express = require("express");
 const useragent = require("express-useragent");
 const geoip = require("geoip-lite");
-const fs = require("fs");
+const mongoose = require("mongoose");
 
 const app = express();
 const PORT = 3000;
 
 // Middleware useragent
 app.use(useragent.express());
+
+// Koneksi MongoDB
+mongoose
+  .connect("mongodb://localhost:27017/trackDB")
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((error) => console.error("Error connecting to MongoDB:", error));
+
+// Schema untuk Data Tracking
+const trackingSchema = new mongoose.Schema({
+  id: String,
+  ip: String,
+  location: Object,
+  browser: String,
+  os: String,
+  time: Date,
+});
+
+const TrackingData = mongoose.model("TrackingData", trackingSchema);
 
 // Route tracking
 app.get("/track/:id", (req, res) => {
@@ -25,22 +43,19 @@ app.get("/track/:id", (req, res) => {
     time: new Date(),
   };
 
-  // Ambil data lama dari file, lalu tambahkan data baru
-  const filePath = "./log.json";
+  // Simpan data ke MongoDB
+  const newTrackingData = new TrackingData(data);
 
-  // Cek kalau file belum ada, buat kosong dulu
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, "[]");
-  }
-
-  // Baca file
-  const fileData = JSON.parse(fs.readFileSync(filePath));
-  fileData.push(data);
-
-  // Tulis kembali ke file
-  fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2));
-
-  res.redirect("https://example.com");
+  newTrackingData
+    .save()
+    .then(() => {
+      console.log("Data tracking berhasil disimpan ke MongoDB");
+      res.redirect("https://example.com");
+    })
+    .catch((error) => {
+      console.error("Gagal menyimpan data ke MongoDB:", error);
+      res.status(500).send("Terjadi kesalahan saat menyimpan data.");
+    });
 });
 
 // Start server
