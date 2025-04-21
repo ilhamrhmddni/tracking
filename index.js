@@ -10,16 +10,35 @@ const MONGO_URI = "mongodb://localhost:27017/trackingDB";
 // Middleware user-agent
 app.use(useragent.express());
 
-// Koneksi ke MongoDB
-mongoose
-  .connect(MONGO_URI, {
-    dbName: "trackingDB",
-  }) // Added options for compatibility
-  .then(() => console.log("✅ Terhubung ke MongoDB"))
-  .catch((err) => {
-    console.error("❌ Gagal konek MongoDB:", err);
-    process.exit(1); // Exit process if connection fails
-  });
+// Koneksi ke MongoDB dengan retry logic
+const connectWithRetry = async (retries = 5, delay = 5000) => {
+  while (retries > 0) {
+    try {
+      await mongoose.connect(MONGO_URI, {
+        dbName: "trackingDB",
+      });
+      console.log("✅ Terhubung ke MongoDB");
+      return;
+    } catch (err) {
+      console.error(
+        `❌ Gagal konek MongoDB (sisa percobaan: ${retries}):`,
+        err
+      );
+      retries -= 1;
+      if (retries === 0) {
+        console.error(
+          "❌ Tidak dapat terhubung ke MongoDB setelah beberapa percobaan. Keluar."
+        );
+        process.exit(1);
+      }
+      console.log(`🔄 Mencoba kembali dalam ${delay / 1000} detik...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+};
+
+// Call the retry function to connect to MongoDB
+connectWithRetry();
 
 // Skema dan model
 const trackingSchema = new mongoose.Schema({
