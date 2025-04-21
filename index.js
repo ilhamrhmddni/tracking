@@ -11,7 +11,7 @@ app.use(useragent.express());
 // Route tracking
 app.get("/track/:id", (req, res) => {
   const id = req.params.id;
-  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  const ip = req.headers["x-forwarded-for"] || "8.8.8.8"; // contoh IP Google
   const geo = geoip.lookup(ip);
   const ua = req.useragent;
 

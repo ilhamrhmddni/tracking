@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "express": "^5.1.0",
+    "express-useragent": "^1.0.15",
     "geoip-lite": "^1.4.10",
     "useragent": "^2.3.0"
   }
