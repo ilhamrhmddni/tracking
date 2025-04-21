@@ -36,6 +36,7 @@ const Tracking = mongoose.model("Tracking", trackingSchema);
 
 // Route utama
 app.get("/track/:id", async (req, res) => {
+  const startTime = Date.now(); // Start timing the request
   try {
     const id = req.params.id;
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
@@ -60,19 +61,29 @@ app.get("/track/:id", async (req, res) => {
       time: new Date(),
     });
 
-    await data
-      .save()
+    // Add a timeout for the save operation
+    const savePromise = data.save();
+    const timeoutPromise = new Promise(
+      (_, reject) =>
+        setTimeout(() => reject(new Error("Database save timeout")), 5000) // 5-second timeout
+    );
+
+    await Promise.race([savePromise, timeoutPromise])
       .then(() => {
         console.log("✅ Data berhasil disimpan ke database:", data);
       })
       .catch((saveError) => {
         console.error("❌ Gagal menyimpan data ke database:", saveError);
+        throw saveError; // Re-throw to handle in the catch block
       });
 
     res.redirect("https://example.com"); // Ganti sesuai kebutuhan
   } catch (error) {
     console.error("❌ Error saat menyimpan data:", error);
     res.status(500).send("Internal Server Error");
+  } finally {
+    const endTime = Date.now();
+    console.log(`⏱️ Waktu pemrosesan: ${endTime - startTime}ms`);
   }
 });
 
