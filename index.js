@@ -27,6 +27,7 @@ app.post("/track", async (req, res) => {
   const { latitude, longitude } = req.body;
   const gmapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`; // Generate Google Maps link
   const currentDate = new Date();
+  currentDate.setHours(currentDate.getHours() + 8); // Adjust to WITA (UTC+8)
   const id = `${currentDate.getDate()}/${
     currentDate.getMonth() + 1
   }/${currentDate.getFullYear()} ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}`; // Generate ID as DD/MM/YYYY HH:MM:SS
