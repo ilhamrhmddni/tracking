@@ -1,8 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors"); // Import CORS middleware
+
 const app = express();
 const PORT = 3000;
 
+app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Untuk menerima JSON
 
 mongoose.connect(
